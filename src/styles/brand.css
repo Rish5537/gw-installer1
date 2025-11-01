@@ -1,0 +1,60 @@
+/* ✍️ Typography import — must always be at the top */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+/* 🎨 Gignaati Brand System — Unified Design Tokens */
+:root {
+  /* Primary Colors */
+  --gignaati-primary: #2563eb;
+  --gignaati-secondary: #10b981;
+  --gignaati-accent: #f59e0b;
+
+  /* Neutral Colors */
+  --gignaati-dark: #1f2937;
+  --gignaati-medium: #6b7280;
+  --gignaati-light: #f3f4f6;
+  --gignaati-white: #ffffff;
+
+  /* Status Colors */
+  --gignaati-success: #10b981;
+  --gignaati-warning: #f59e0b;
+  --gignaati-error: #ef4444;
+  --gignaati-info: #3b82f6;
+
+  /* Background Gradients */
+  --gignaati-gradient-primary: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  --gignaati-gradient-secondary: linear-gradient(135deg, #10b981 0%, #059669 100%);
+
+  /* ✍️ Typography */
+  --font-primary: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.25rem;
+  --text-2xl: 1.5rem;
+  --text-3xl: 1.875rem;
+  --text-4xl: 2.25rem;
+
+  /* 🧱 Spacing */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+
+  /* 🔲 Border Radius */
+  --radius-sm: 0.25rem;
+  --radius-md: 0.375rem;
+  --radius-lg: 0.5rem;
+  --radius-xl: 0.75rem;
+
+  /* ☁️ Shadows */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
