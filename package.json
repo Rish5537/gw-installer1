@@ -1,5 +1,7 @@
 {
   "name": "gw-installer",
+  "description":"Cross-platform installer for the Gignaati Workbench environment",
+  "author":"Rishabh Gaur <rishabh.gaur@gignaati.com>",
   "private": true,
   "version": "0.1.0",
   "type": "module",
