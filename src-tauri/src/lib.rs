@@ -1,25 +1,30 @@
 // 🧩 Gignaati Workbench Installer Backend
-// 🔧 Phase 3.4 — Node.js Detection + Installer Integration
+// 🔧 Phase 3.4 — Node.js + n8n + Ollama Detection Integration
 
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 // === Modules ===
-mod system;      // ✅ System detection
-mod ports;       // ✅ Port management
-mod installer;   // ✅ Installer + Node.js detection
+mod system;
+mod ports;
+mod installer;
 
 // === Imports ===
 use system::detector::validate_requirements;
 use ports::manager::allocate_ports;
-use installer::{run_installation, check_nodejs_installed};
+use installer::{
+    check_nodejs_installed,
+    check_n8n_installed,
+    check_ollama_installed,
+    run_installation,
+};
 
-// === Example command ===
+// === Example command (still useful for testing) ===
 #[tauri::command]
 fn greet(name: &str) -> String {
     format!("Hello, {}! You've been greeted from Rust!", name)
 }
 
-// === Entry point ===
+// === Main Tauri Application Entry ===
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -28,9 +33,11 @@ pub fn run() {
             greet,
             validate_requirements,
             allocate_ports,
-            run_installation,
-            check_nodejs_installed
+            check_nodejs_installed,
+            check_n8n_installed,
+            check_ollama_installed,
+            run_installation
         ])
         .run(tauri::generate_context!())
-        .expect("error while running tauri application");
+        .expect("❌ Failed to run Gignaati Workbench Installer");
 }
