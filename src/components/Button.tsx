@@ -6,6 +6,7 @@ interface ButtonProps {
   onClick?: () => void;
   variant?: "primary" | "secondary" | "danger";
   disabled?: boolean;
+  style?: React.CSSProperties; // ✅ allow inline style overrides
 }
 
 export default function Button({
@@ -13,6 +14,7 @@ export default function Button({
   onClick,
   variant = "primary",
   disabled = false,
+  style = {},
 }: ButtonProps) {
   const colorMap = {
     primary: {
@@ -45,6 +47,8 @@ export default function Button({
         opacity: disabled ? 0.6 : 1,
         fontWeight: 500,
         transition: "background 0.3s ease",
+        fontFamily: "var(--font-primary)",
+        ...style, // ✅ merge custom inline styles safely
       }}
       onMouseEnter={(e) => {
         if (!disabled) (e.target as HTMLButtonElement).style.background = hover;

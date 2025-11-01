@@ -1,15 +1,30 @@
-interface Props {
-    progress: number;
-  }
-  
-  export default function ProgressBar({ progress }: Props) {
-    return (
-      <div className="w-full bg-gray-200 rounded-full h-4">
-        <div
-          className="bg-green-500 h-4 rounded-full transition-all duration-300"
-          style={{ width: `${progress}%` }}
-        />
-      </div>
-    );
-  }
-  
+import React from "react";
+
+interface ProgressBarProps {
+  progress: number;
+}
+
+export default function ProgressBar({ progress }: ProgressBarProps) {
+  return (
+    <div
+      style={{
+        width: "100%",
+        background: "var(--gignaati-light)",
+        borderRadius: "var(--radius-md)",
+        boxShadow: "var(--shadow-sm)",
+        overflow: "hidden",
+        height: "16px",
+        marginBottom: "var(--space-4)",
+      }}
+    >
+      <div
+        style={{
+          width: `${progress}%`,
+          background: "var(--gignaati-gradient-primary)",
+          height: "100%",
+          transition: "width 0.3s ease",
+        }}
+      />
+    </div>
+  );
+}

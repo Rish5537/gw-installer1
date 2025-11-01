@@ -1,11 +1,15 @@
 import React, { ReactNode } from "react";
 import "../styles/brand.css";
 
+/* ============================= */
+/* 🔤 HEADING COMPONENT           */
+/* ============================= */
+
 interface HeadingProps {
   level?: 1 | 2 | 3 | 4;
   children: ReactNode;
   align?: "left" | "center" | "right";
-  color?: "primary" | "secondary" | "dark" | "light";
+  color?: "primary" | "secondary" | "dark" | "light" | string; // ✅ now supports CSS variables
 }
 
 export function Heading({
@@ -14,8 +18,7 @@ export function Heading({
   align = "center",
   color = "primary",
 }: HeadingProps) {
-    const Tag = `h${level}` as keyof React.JSX.IntrinsicElements;
-
+  const Tag = `h${level}` as keyof React.JSX.IntrinsicElements;
 
   const colorMap = {
     primary: "var(--gignaati-primary)",
@@ -31,10 +34,15 @@ export function Heading({
     4: "var(--text-lg)",
   };
 
+  const resolvedColor =
+    typeof color === "string" && color.startsWith("var(")
+      ? color // ✅ allow direct CSS variables like var(--gignaati-primary)
+      : colorMap[color as keyof typeof colorMap] ?? "var(--gignaati-dark)";
+
   return (
     <Tag
       style={{
-        color: colorMap[color],
+        color: resolvedColor,
         fontSize: sizeMap[level],
         fontFamily: "var(--font-primary)",
         textAlign: align,
@@ -46,16 +54,24 @@ export function Heading({
   );
 }
 
+/* ============================= */
+/* 📝 TEXT COMPONENT              */
+/* ============================= */
+
 interface TextProps {
   children: ReactNode;
   variant?: "body" | "muted" | "success" | "error" | "warning";
   align?: "left" | "center" | "right";
+  size?: "xs" | "sm" | "base" | "lg";
+  color?: string; // ✅ added to support custom CSS variable colors
 }
 
 export function Text({
   children,
   variant = "body",
   align = "left",
+  size = "base",
+  color,
 }: TextProps) {
   const colorMap = {
     body: "var(--gignaati-dark)",
@@ -65,11 +81,18 @@ export function Text({
     warning: "var(--gignaati-warning)",
   };
 
+  const sizeMap = {
+    xs: "var(--text-xs)",
+    sm: "var(--text-sm)",
+    base: "var(--text-base)",
+    lg: "var(--text-lg)",
+  };
+
   return (
     <p
       style={{
-        color: colorMap[variant],
-        fontSize: "var(--text-base)",
+        color: color ?? colorMap[variant],
+        fontSize: sizeMap[size],
         fontFamily: "var(--font-primary)",
         textAlign: align,
         lineHeight: 1.6,
