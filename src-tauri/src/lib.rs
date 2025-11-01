@@ -1,6 +1,7 @@
 // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
 // Import the new Rust system check module
 mod system_check;
+mod installer;
 
 // Simple example command (default)
 #[tauri::command]
@@ -15,7 +16,8 @@ pub fn run() {
         // Register both greet and detect_system commands
         .invoke_handler(tauri::generate_handler![
             greet,
-            system_check::detect_system
+            system_check::detect_system,
+            installer::run_installation
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

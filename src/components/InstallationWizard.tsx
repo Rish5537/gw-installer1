@@ -1,4 +1,6 @@
-import { useState } from "react";
+import { invoke } from "@tauri-apps/api/core";
+import { listen } from "@tauri-apps/api/event";
+import { useState, useEffect } from "react";
 import WelcomeScreen from "./WelcomeScreen";
 import SystemCheck from "./SystemCheck";
 import ProgressBar from "./ProgressBar";
@@ -9,44 +11,61 @@ export type WizardStep = "welcome" | "system" | "install" | "success";
 
 export default function InstallationWizard() {
   const [step, setStep] = useState<WizardStep>("welcome");
+  const [logs, setLogs] = useState<string[]>([]);
+  const [progress, setProgress] = useState<number>(0);
 
   const next = () => {
     if (step === "welcome") setStep("system");
     else if (step === "system") setStep("install");
-    else if (step === "install") setStep("success");
   };
 
-  const back = () => {
-    if (step === "success") setStep("install");
-    else if (step === "install") setStep("system");
-    else if (step === "system") setStep("welcome");
+  const startInstallation = async () => {
+    setStep("install");
+    setLogs(["Starting installation..."]);
+    setProgress(0);
+
+    await invoke("run_installation");
+
+    listen("install-log", (event) => {
+      setLogs((prev) => [...prev, event.payload as string]);
+    });
+
+    listen("install-progress", (event) => {
+      const data = event.payload as { progress: number };
+      setProgress(data.progress);
+    });
+
+    listen("install-complete", () => {
+      setProgress(100);
+      setLogs((prev) => [...prev, "✅ Installation completed!"]);
+      setTimeout(() => setStep("success"), 1000);
+    });
   };
 
   return (
     <div className="p-8 text-center">
       {step === "welcome" && <WelcomeScreen onNext={next} />}
-      {step === "system" && <SystemCheck />}
-      {step === "install" && (
+      {step === "system" && (
         <div>
-          <h2 className="text-xl font-semibold mb-4">Installing components …</h2>
-          <ProgressBar progress={65} />
-          <LogViewer />
-          <button className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg"
-                  onClick={next}>Simulate Success</button>
+          <SystemCheck />
+          <button
+            className="mt-6 px-6 py-2 bg-green-600 text-white rounded-lg"
+            onClick={startInstallation}
+          >
+            Start Installation
+          </button>
         </div>
       )}
-      {step === "success" && <SuccessScreen onRestart={() => setStep("welcome")} />}
-
-      <div className="mt-6 flex justify-center gap-4">
-        {step !== "welcome" && step !== "success" && (
-          <button onClick={back}
-                  className="px-4 py-2 bg-gray-300 rounded-lg">Back</button>
-        )}
-        {step !== "success" && (
-          <button onClick={next}
-                  className="px-4 py-2 bg-green-600 text-white rounded-lg">Next</button>
-        )}
-      </div>
+      {step === "install" && (
+        <div>
+          <h2 className="text-xl font-semibold mb-4">Installing components…</h2>
+          <ProgressBar progress={progress} />
+          <LogViewer logs={logs} />
+        </div>
+      )}
+      {step === "success" && (
+        <SuccessScreen onRestart={() => setStep("welcome")} />
+      )}
     </div>
   );
 }
