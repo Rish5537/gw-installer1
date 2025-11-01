@@ -60,18 +60,14 @@ export function Heading({
 
 interface TextProps {
   children: ReactNode;
-  variant?: "body" | "muted" | "success" | "error" | "warning";
+  variant?: "body" | "muted" | "success" | "error" | "warning" | "info";
   align?: "left" | "center" | "right";
-  size?: "xs" | "sm" | "base" | "lg";
-  color?: string; // ✅ added to support custom CSS variable colors
 }
 
 export function Text({
   children,
   variant = "body",
   align = "left",
-  size = "base",
-  color,
 }: TextProps) {
   const colorMap = {
     body: "var(--gignaati-dark)",
@@ -79,20 +75,14 @@ export function Text({
     success: "var(--gignaati-success)",
     error: "var(--gignaati-error)",
     warning: "var(--gignaati-warning)",
-  };
-
-  const sizeMap = {
-    xs: "var(--text-xs)",
-    sm: "var(--text-sm)",
-    base: "var(--text-base)",
-    lg: "var(--text-lg)",
+    info: "var(--gignaati-info)", // ✅ added support for 'info'
   };
 
   return (
     <p
       style={{
-        color: color ?? colorMap[variant],
-        fontSize: sizeMap[size],
+        color: colorMap[variant],
+        fontSize: "var(--text-base)",
         fontFamily: "var(--font-primary)",
         textAlign: align,
         lineHeight: 1.6,
@@ -103,3 +93,4 @@ export function Text({
     </p>
   );
 }
+

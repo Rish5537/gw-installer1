@@ -1,9 +1,18 @@
+// 🧩 Installer module index
+
+// Submodules
+pub mod nodejs;
+
+// Re-exports for easier access in lib.rs
+pub use crate::installer::nodejs::check_nodejs_installed;
+
+// ✅ Your installer logic moved here (from installer.rs)
 use std::process::{Command, Stdio};
 use std::io::{BufRead, BufReader};
-use tauri::{AppHandle, Emitter}; // ✅ only one import line now
+use tauri::{AppHandle, Emitter};
 use serde::Serialize;
 
-#[derive(Serialize, Clone)] // ✅ added Clone
+#[derive(Serialize, Clone)]
 pub struct InstallProgress {
     step: String,
     message: String,

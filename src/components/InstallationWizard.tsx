@@ -79,32 +79,28 @@ export default function InstallationWizard() {
             padding: "var(--space-6)",
           }}
         >
-          <Heading level={2} color="var(--gignaati-primary)">
+          <Heading level={2} color="primary">
             System Check
           </Heading>
-          <Text size="sm" color="var(--gignaati-medium)">
+          <Text variant="muted">
             We’re verifying your system meets all minimum requirements.
           </Text>
+
           <div style={{ marginTop: "var(--space-6)" }}>
             <SystemCheck />
-            <Button
-              label="Proceed to Installation"
-              onClick={next}
-              style={{
-                marginTop: "var(--space-6)",
-                background: "var(--gignaati-gradient-primary)",
-              }}
-            />
+            <div style={{ marginTop: "var(--space-6)" }}>
+              <Button label="Proceed to Installation" onClick={next} />
+            </div>
           </div>
         </div>
       )}
 
       {step === "install" && (
         <div>
-          <Heading level={2} color="var(--gignaati-primary)">
+          <Heading level={2} color="primary">
             Installing Components
           </Heading>
-          <Text size="sm" color="var(--gignaati-medium)">
+          <Text variant="muted">
             Please wait while we set everything up.
           </Text>
           <div style={{ marginTop: "var(--space-6)" }}>
