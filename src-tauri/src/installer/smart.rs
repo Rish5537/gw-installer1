@@ -1,124 +1,108 @@
 use tauri::{AppHandle, Emitter};
-use crate::installer::{
-    check_nodejs_installed,
-    check_n8n_installed,
-    check_ollama_installed,
-    install_n8n,
-    install_ollama,
-    run_installation,
-};
-use std::{thread, time::Duration};
 use serde::Serialize;
+use std::{thread, time::Duration};
 
-#[derive(Serialize, Clone)] // ✅ added Clone
-pub struct SmartProgress {
-    step: String,
+#[derive(Serialize, Clone)]
+pub struct ComponentProgress {
+    component: String,
+    percent: u8,
+    status: String,
     message: String,
-    progress: u8,
+    eta_seconds: Option<u32>,
+}
+
+#[derive(Serialize, Clone)]
+pub struct ComponentLog {
+    component: String,
+    message: String,
 }
 
 #[tauri::command]
 pub async fn smart_installer(app: AppHandle) -> Result<(), String> {
-    app.emit("install-log", "🚀 Starting Smart Installer...").ok();
+    app.emit(
+        "component-log",
+        ComponentLog {
+            component: "Smart Installer".into(),
+            message: "🚀 Starting Smart Installation (simulation)...".into(),
+        },
+    ).ok();
 
-    // === Step 1: Check Node.js ===
-    let node_check = check_nodejs_installed(); // ✅ no .map_err
+    let components = vec![
+        ("Node.js", 25),
+        ("Agentic Platform", 35),
+        ("AI Brain", 30),
+        ("Finalizing Setup", 10),
+    ];
 
-    if !node_check.installed {
-        app.emit(
-            "install-log",
-            "❌ Node.js not found. Please install it first using the official link.",
-        )
-        .ok();
-
-        #[cfg(target_os = "windows")]
-        let url = "https://nodejs.org/dist/latest-v18.x/node-v18.x-x64.msi";
-        #[cfg(target_os = "macos")]
-        let url = "https://nodejs.org/en/download/";
-        #[cfg(target_os = "linux")]
-        let url = "https://nodejs.org/en/download/package-manager/";
-
-        app.emit("node-missing", url).ok();
-        return Err("Node.js not installed".into());
+    for (name, weight) in components {
+        simulate_component(&app, name, weight);
     }
-
-    app.emit("install-log", "✅ Node.js detected.").ok();
-
-    // === Step 2: Agentic Platform (n8n) ===
-    let n8n_status = check_n8n_installed().unwrap_or_else(|_| {
-        panic!("n8n check failed");
-    });
-
-    if !n8n_status.installed {
-        app.emit("install-log", "⬇ Installing Agentic Platform...").ok();
-        install_n8n(app.clone())?;
-        app.emit("install-log", "✅ Agentic Platform installed.").ok();
-    } else {
-        app.emit("install-log", "✅ Agentic Platform already installed.").ok();
-    }
-
-    // === Step 3: AI Brain (Ollama) ===
-    let ollama_status = check_ollama_installed().unwrap_or_else(|_| {
-        panic!("Ollama check failed");
-    });
-
-    if !ollama_status.installed {
-        app.emit("install-log", "⬇ Installing AI Brain...").ok();
-        install_ollama(app.clone())?;
-        app.emit("install-log", "✅ AI Brain installed.").ok();
-    } else {
-        app.emit("install-log", "✅ AI Brain already installed.").ok();
-    }
-
-    // === Step 4: Final installation tasks ===
-    app.emit("install-log", "⚙ Finalizing setup...").ok();
-    run_installation(app.clone())?;
-
-    thread::sleep(Duration::from_secs(1));
 
     app.emit(
-        "install-complete",
-        SmartProgress {
-            step: "Complete".into(),
-            message: "🎉 All systems ready. Launch Gignaati Workbench.".into(),
-            progress: 100,
+        "smart-complete",
+        ComponentLog {
+            component: "Smart Installer".into(),
+            message: "🎉 All simulated components installed successfully! Ready to launch.".into(),
         },
-    )
-    .ok();
+    ).ok();
 
     Ok(())
 }
 
-#[tauri::command]
-pub fn launch_platform(app: AppHandle) -> Result<(), String> {
-    app.emit("install-log", "🚀 Launching Gignaati Workbench...").ok();
+/// Simulate each component installation
+fn simulate_component(app: &AppHandle, name: &str, _weight: u8) {
+    app.emit(
+        "component-log",
+        ComponentLog {
+            component: name.to_string(),
+            message: format!("⏳ Starting {}...", name),
+        },
+    ).ok();
 
-    // Try to run n8n through npm if global binary is missing
-    let commands = if cfg!(target_os = "windows") {
-        vec![
-            ("cmd", vec!["/C", "n8n"]),
-            ("cmd", vec!["/C", "npx", "n8n"]),
-            ("cmd", vec!["/C", "npm", "exec", "n8n"]),
-        ]
-    } else {
-        vec![
-            ("sh", vec!["-c", "n8n"]),
-            ("sh", vec!["-c", "npx n8n"]),
-            ("sh", vec!["-c", "npm exec n8n"]),
-        ]
-    };
+    for i in 1..=100 {
+        thread::sleep(Duration::from_millis(40));
+        let eta = Some(((100 - i) / 2) as u32);
 
-    for (exe, args) in commands {
-        if std::process::Command::new(exe)
-            .args(args)
-            .spawn()
-            .is_ok()
-        {
-            app.emit("install-log", "✅ Gignaati Workbench launched!").ok();
-            return Ok(());
-        }
+        app.emit(
+            "component-progress",
+            ComponentProgress {
+                component: name.to_string(),
+                percent: i,
+                status: if i < 100 { "running".into() } else { "done".into() },
+                message: format!("{} progress: {}%", name, i),
+                eta_seconds: eta,
+            },
+        ).ok();
     }
 
-    Err("❌ Could not launch Gignaati Workbench. Please verify installation.".into())
+    app.emit(
+        "component-log",
+        ComponentLog {
+            component: name.to_string(),
+            message: format!("✅ {} simulation complete.", name),
+        },
+    ).ok();
 }
 
+#[tauri::command]
+pub fn launch_platform(app: AppHandle) -> Result<(), String> {
+    app.emit(
+        "component-log",
+        ComponentLog {
+            component: "Smart Installer".into(),
+            message: "🚀 Launching simulated Gignaati Workbench...".into(),
+        },
+    ).ok();
+
+    thread::sleep(Duration::from_secs(2));
+
+    app.emit(
+        "component-log",
+        ComponentLog {
+            component: "Smart Installer".into(),
+            message: "✅ Simulation: Gignaati Workbench launched successfully!".into(),
+        },
+    ).ok();
+
+    Ok(())
+}
