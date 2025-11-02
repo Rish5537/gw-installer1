@@ -21,6 +21,7 @@ use installer::{
     smart_installer,
     launch_platform,
     start_progress_tracking,
+    cleanup::cleanup_installation,
 };
 
 // === Example command (useful for testing basic Tauri bridge) ===
@@ -46,7 +47,8 @@ pub fn run() {
             run_installation,
             smart_installer,
             launch_platform,
-            start_progress_tracking
+            start_progress_tracking,
+            cleanup_installation
         ]);
 
     builder

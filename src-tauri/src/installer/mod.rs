@@ -6,6 +6,7 @@ pub mod ollama;
 pub mod runner;
 pub mod smart;
 pub mod progress;
+pub mod cleanup;
 
 // Re-exports for lib.rs
 pub use nodejs::check_nodejs_installed;
