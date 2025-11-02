@@ -15,7 +15,11 @@ use installer::{
     check_nodejs_installed,
     check_n8n_installed,
     check_ollama_installed,
+    install_n8n,
+    install_ollama,
     run_installation,
+    smart_installer,
+    launch_platform,
 };
 
 // === Example command (still useful for testing) ===
@@ -27,7 +31,7 @@ fn greet(name: &str) -> String {
 // === Main Tauri Application Entry ===
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    tauri::Builder::default()
+    let builder = tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
         .invoke_handler(tauri::generate_handler![
             greet,
@@ -36,8 +40,15 @@ pub fn run() {
             check_nodejs_installed,
             check_n8n_installed,
             check_ollama_installed,
-            run_installation
-        ])
+            install_n8n,
+            install_ollama,
+            run_installation,
+            smart_installer,
+            launch_platform
+        ]);
+
+    builder
         .run(tauri::generate_context!())
         .expect("❌ Failed to run Gignaati Workbench Installer");
 }
+
