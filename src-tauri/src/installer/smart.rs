@@ -26,13 +26,14 @@ pub async fn smart_installer(app: AppHandle) -> Result<(), String> {
             component: "Smart Installer".into(),
             message: "🚀 Starting Smart Installation...".into(),
         },
-    ).ok();
+    )
+    .ok();
 
     // === Components and weights ===
     let components = vec![
         ("Node.js", 25),
         ("Agentic Platform", 35),
-        ("AI Brain", 30),
+        ("AI Brain (Ollama)", 30),
         ("Finalizing Setup", 10),
     ];
 
@@ -41,7 +42,7 @@ pub async fn smart_installer(app: AppHandle) -> Result<(), String> {
 
     for (name, weight) in components {
         match name {
-            // === Node.js detection step (still simulated for now) ===
+            // === Node.js detection step (simulated for now) ===
             "Node.js" => {
                 app.emit(
                     "component-log",
@@ -49,7 +50,8 @@ pub async fn smart_installer(app: AppHandle) -> Result<(), String> {
                         component: name.to_string(),
                         message: "🔍 Checking Node.js installation...".into(),
                     },
-                ).ok();
+                )
+                .ok();
 
                 simulate_component(&app, name, weight);
             }
@@ -63,7 +65,8 @@ pub async fn smart_installer(app: AppHandle) -> Result<(), String> {
                             component: name.to_string(),
                             message: "⬇ Installing Agentic Platform (real install via npm)...".into(),
                         },
-                    ).ok();
+                    )
+                    .ok();
 
                     match crate::installer::install_n8n_real(app.clone()) {
                         Ok(_) => {
@@ -73,7 +76,8 @@ pub async fn smart_installer(app: AppHandle) -> Result<(), String> {
                                     component: name.to_string(),
                                     message: "✅ Agentic Platform (n8n) installed successfully!".into(),
                                 },
-                            ).ok();
+                            )
+                            .ok();
                         }
                         Err(e) => {
                             app.emit(
@@ -82,7 +86,8 @@ pub async fn smart_installer(app: AppHandle) -> Result<(), String> {
                                     component: name.to_string(),
                                     message: format!("❌ Failed to install n8n: {}", e),
                                 },
-                            ).ok();
+                            )
+                            .ok();
                         }
                     }
                 } else {
@@ -92,23 +97,69 @@ pub async fn smart_installer(app: AppHandle) -> Result<(), String> {
                             component: name.to_string(),
                             message: "⚙ Using simulated n8n installer...".into(),
                         },
-                    ).ok();
+                    )
+                    .ok();
 
                     simulate_component(&app, name, weight);
                 }
             }
 
             // === AI Brain (Ollama) ===
-            "AI Brain" => {
+            "AI Brain (Ollama)" => {
                 app.emit(
                     "component-log",
                     ComponentLog {
                         component: name.to_string(),
                         message: "🧠 Preparing AI Brain (Ollama)...".into(),
                     },
-                ).ok();
+                )
+                .ok();
 
-                simulate_component(&app, name, weight);
+                if use_real_install {
+                    app.emit(
+                        "component-log",
+                        ComponentLog {
+                            component: name.to_string(),
+                            message: "⬇ Installing or verifying Ollama (real check)...".into(),
+                        },
+                    )
+                    .ok();
+
+                    // Run the real Ollama installer integration
+                    match crate::installer::install_ollama_real(app.clone()) {
+                        Ok(_) => {
+                            app.emit(
+                                "component-log",
+                                ComponentLog {
+                                    component: name.to_string(),
+                                    message: "✅ Ollama installation verified successfully.".into(),
+                                },
+                            )
+                            .ok();
+                        }
+                        Err(e) => {
+                            app.emit(
+                                "component-log",
+                                ComponentLog {
+                                    component: name.to_string(),
+                                    message: format!("❌ Failed to verify/install Ollama: {}", e),
+                                },
+                            )
+                            .ok();
+                        }
+                    }
+                } else {
+                    app.emit(
+                        "component-log",
+                        ComponentLog {
+                            component: name.to_string(),
+                            message: "⚙ Using simulated Ollama installer...".into(),
+                        },
+                    )
+                    .ok();
+
+                    simulate_component(&app, name, weight);
+                }
             }
 
             // === Finalizing setup ===
@@ -126,7 +177,8 @@ pub async fn smart_installer(app: AppHandle) -> Result<(), String> {
             component: "Smart Installer".into(),
             message: "🎉 All components installed successfully! Ready to launch.".into(),
         },
-    ).ok();
+    )
+    .ok();
 
     Ok(())
 }
@@ -139,7 +191,8 @@ fn simulate_component(app: &AppHandle, name: &str, _weight: u8) {
             component: name.to_string(),
             message: format!("⏳ Starting {}...", name),
         },
-    ).ok();
+    )
+    .ok();
 
     for i in 1..=100 {
         thread::sleep(Duration::from_millis(40));
@@ -154,7 +207,8 @@ fn simulate_component(app: &AppHandle, name: &str, _weight: u8) {
                 message: format!("{} progress: {}%", name, i),
                 eta_seconds: eta,
             },
-        ).ok();
+        )
+        .ok();
     }
 
     app.emit(
@@ -163,7 +217,8 @@ fn simulate_component(app: &AppHandle, name: &str, _weight: u8) {
             component: name.to_string(),
             message: format!("✅ {} simulation complete.", name),
         },
-    ).ok();
+    )
+    .ok();
 }
 
 #[tauri::command]
@@ -174,7 +229,8 @@ pub fn launch_platform(app: AppHandle) -> Result<(), String> {
             component: "Smart Installer".into(),
             message: "🚀 Launching Gignaati Workbench...".into(),
         },
-    ).ok();
+    )
+    .ok();
 
     thread::sleep(Duration::from_secs(2));
 
@@ -184,7 +240,8 @@ pub fn launch_platform(app: AppHandle) -> Result<(), String> {
             component: "Smart Installer".into(),
             message: "✅ Gignaati Workbench launched successfully!".into(),
         },
-    ).ok();
+    )
+    .ok();
 
     Ok(())
 }

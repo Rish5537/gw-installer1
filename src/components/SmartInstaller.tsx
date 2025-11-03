@@ -20,6 +20,8 @@ export default function SmartInstaller() {
   const [components, setComponents] = useState<Record<string, ComponentProgress>>({});
   const [logs, setLogs] = useState<string[]>([]);
   const [nodeDownloadUrl, setNodeDownloadUrl] = useState<string | null>(null);
+  const [ollamaWaiting, setOllamaWaiting] = useState(false);
+  const [checkingOllama, setCheckingOllama] = useState(false);
 
   // 🔊 Subscribe to backend events
   useEffect(() => {
@@ -32,7 +34,22 @@ export default function SmartInstaller() {
     });
 
     const unL = listen<ComponentLog>("component-log", (e: Event<ComponentLog>) => {
-      setLogs((prev) => [...prev, `[${e.payload.component}] ${e.payload.message}`]);
+      const { component, message } = e.payload;
+      setLogs((prev) => [...prev, `[${component}] ${message}`]);
+
+      // Detect Ollama manual step trigger
+      if (
+        message.includes("Ollama not found") ||
+        message.includes("download Ollama manually") ||
+        message.includes("waiting for manual installation")
+      ) {
+        setOllamaWaiting(true);
+      }
+
+      // Hide check button once Ollama is detected
+      if (message.includes("✅ Ollama detected")) {
+        setOllamaWaiting(false);
+      }
     });
 
     const unC = listen<ComponentLog>("smart-complete", (e: Event<ComponentLog>) => {
@@ -89,7 +106,7 @@ export default function SmartInstaller() {
     }
   };
 
-  // 🔧 Repair existing installation (same simulation as installer)
+  // 🔧 Repair installation
   const repair = async () => {
     if (running) return;
     setLogs(["🔧 Attempting repair of existing setup..."]);
@@ -101,6 +118,21 @@ export default function SmartInstaller() {
       setLogs((l) => [...l, `Repair failed: ${String(err)}`]);
     } finally {
       setRunning(false);
+    }
+  };
+
+  // 🔄 Manual re-check for Ollama after user installs it
+  const checkOllamaAgain = async () => {
+    setCheckingOllama(true);
+    try {
+      setLogs((prev) => [...prev, "[AI Brain] 🔄 Re-checking for Ollama installation..."]);
+      await invoke("install_ollama_real");
+      setLogs((prev) => [...prev, "[AI Brain] ✅ Ollama verified successfully."]);
+      setOllamaWaiting(false);
+    } catch (err) {
+      setLogs((prev) => [...prev, `[AI Brain] ❌ Still not detected: ${String(err)}`]);
+    } finally {
+      setCheckingOllama(false);
     }
   };
 
@@ -241,6 +273,40 @@ export default function SmartInstaller() {
           </div>
         ))}
       </div>
+
+      {/* ---- Ollama "Check Again" section ---- */}
+      {ollamaWaiting && (
+        <div style={{ marginTop: 16, textAlign: "center" }}>
+          <p style={{ color: "#333", marginBottom: 8 }}>
+            🧠 Please install Ollama manually from{" "}
+            <a
+              href="https://ollama.com/download/windows"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ color: "var(--gignaati-primary)", textDecoration: "underline" }}
+            >
+              ollama.com/download
+            </a>
+            , then click below once it’s ready.
+          </p>
+          <button
+            onClick={checkOllamaAgain}
+            disabled={checkingOllama}
+            style={{
+              padding: "8px 16px",
+              background: checkingOllama
+                ? "gray"
+                : "var(--gignaati-secondary)",
+              color: "white",
+              borderRadius: 8,
+              border: "none",
+              cursor: checkingOllama ? "not-allowed" : "pointer",
+            }}
+          >
+            {checkingOllama ? "Checking..." : "🔄 Check Again"}
+          </button>
+        </div>
+      )}
 
       {/* ---- Log Console ---- */}
       <div style={{ marginTop: 12 }}>

@@ -1,5 +1,5 @@
 // 🧩 Gignaati Workbench Installer Backend
-// 🔧 Phase 4.0 — Real Installation & Smart System Orchestration
+// 🔧 Phase 4.1 — Real Installation (n8n + Ollama Safe Mode)
 
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
@@ -17,12 +17,13 @@ use installer::{
     check_ollama_installed,
     install_n8n,          // legacy simulated install (kept for fallback)
     install_n8n_real,     // ✅ new real npm-based installer
-    install_ollama,
+    install_ollama,       // simulated fallback
+    install_ollama_real,  // ✅ new safe guided installer
     run_installation,
     smart_installer,
     launch_platform,
     start_progress_tracking,
-    cleanup::cleanup_installation,
+    cleanup_installation,
 };
 
 // === Example Command ===
@@ -44,8 +45,9 @@ pub fn run() {
             check_n8n_installed,
             check_ollama_installed,
             install_n8n,
-            install_n8n_real,  // ✅ included correctly
+            install_n8n_real,
             install_ollama,
+            install_ollama_real,
             run_installation,
             smart_installer,
             launch_platform,
