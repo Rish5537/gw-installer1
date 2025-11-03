@@ -1,5 +1,5 @@
 // 🧩 Gignaati Workbench Installer Backend
-// 🔧 Phase 3.7 — Smart Progress Tracking & System Validation
+// 🔧 Phase 4.0 — Real Installation & Smart System Orchestration
 
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
@@ -15,7 +15,8 @@ use installer::{
     check_nodejs_installed,
     check_n8n_installed,
     check_ollama_installed,
-    install_n8n,
+    install_n8n,          // legacy simulated install (kept for fallback)
+    install_n8n_real,     // ✅ new real npm-based installer
     install_ollama,
     run_installation,
     smart_installer,
@@ -24,13 +25,13 @@ use installer::{
     cleanup::cleanup_installation,
 };
 
-// === Example command (useful for testing basic Tauri bridge) ===
+// === Example Command ===
 #[tauri::command]
 fn greet(name: &str) -> String {
     format!("Hello, {}! You've been greeted from Rust!", name)
 }
 
-// === Main Tauri Application Entry Point ===
+// === Main Entry Point ===
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     let builder = tauri::Builder::default()
@@ -43,6 +44,7 @@ pub fn run() {
             check_n8n_installed,
             check_ollama_installed,
             install_n8n,
+            install_n8n_real,  // ✅ included correctly
             install_ollama,
             run_installation,
             smart_installer,

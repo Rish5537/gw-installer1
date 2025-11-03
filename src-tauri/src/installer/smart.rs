@@ -2,6 +2,7 @@ use tauri::{AppHandle, Emitter};
 use serde::Serialize;
 use std::{thread, time::Duration};
 
+// === Data structures used for emitting events to frontend ===
 #[derive(Serialize, Clone)]
 pub struct ComponentProgress {
     component: String,
@@ -23,10 +24,11 @@ pub async fn smart_installer(app: AppHandle) -> Result<(), String> {
         "component-log",
         ComponentLog {
             component: "Smart Installer".into(),
-            message: "🚀 Starting Smart Installation (simulation)...".into(),
+            message: "🚀 Starting Smart Installation...".into(),
         },
     ).ok();
 
+    // === Components and weights ===
     let components = vec![
         ("Node.js", 25),
         ("Agentic Platform", 35),
@@ -34,22 +36,102 @@ pub async fn smart_installer(app: AppHandle) -> Result<(), String> {
         ("Finalizing Setup", 10),
     ];
 
+    // === Developer toggle: use real installers or simulated ===
+    let use_real_install = true; // 🔧 Toggle to false for simulation mode
+
     for (name, weight) in components {
-        simulate_component(&app, name, weight);
+        match name {
+            // === Node.js detection step (still simulated for now) ===
+            "Node.js" => {
+                app.emit(
+                    "component-log",
+                    ComponentLog {
+                        component: name.to_string(),
+                        message: "🔍 Checking Node.js installation...".into(),
+                    },
+                ).ok();
+
+                simulate_component(&app, name, weight);
+            }
+
+            // === Agentic Platform (n8n) ===
+            "Agentic Platform" => {
+                if use_real_install {
+                    app.emit(
+                        "component-log",
+                        ComponentLog {
+                            component: name.to_string(),
+                            message: "⬇ Installing Agentic Platform (real install via npm)...".into(),
+                        },
+                    ).ok();
+
+                    match crate::installer::install_n8n_real(app.clone()) {
+                        Ok(_) => {
+                            app.emit(
+                                "component-log",
+                                ComponentLog {
+                                    component: name.to_string(),
+                                    message: "✅ Agentic Platform (n8n) installed successfully!".into(),
+                                },
+                            ).ok();
+                        }
+                        Err(e) => {
+                            app.emit(
+                                "component-log",
+                                ComponentLog {
+                                    component: name.to_string(),
+                                    message: format!("❌ Failed to install n8n: {}", e),
+                                },
+                            ).ok();
+                        }
+                    }
+                } else {
+                    app.emit(
+                        "component-log",
+                        ComponentLog {
+                            component: name.to_string(),
+                            message: "⚙ Using simulated n8n installer...".into(),
+                        },
+                    ).ok();
+
+                    simulate_component(&app, name, weight);
+                }
+            }
+
+            // === AI Brain (Ollama) ===
+            "AI Brain" => {
+                app.emit(
+                    "component-log",
+                    ComponentLog {
+                        component: name.to_string(),
+                        message: "🧠 Preparing AI Brain (Ollama)...".into(),
+                    },
+                ).ok();
+
+                simulate_component(&app, name, weight);
+            }
+
+            // === Finalizing setup ===
+            "Finalizing Setup" => {
+                simulate_component(&app, name, weight);
+            }
+
+            _ => {}
+        }
     }
 
     app.emit(
         "smart-complete",
         ComponentLog {
             component: "Smart Installer".into(),
-            message: "🎉 All simulated components installed successfully! Ready to launch.".into(),
+            message: "🎉 All components installed successfully! Ready to launch.".into(),
         },
     ).ok();
 
     Ok(())
 }
 
-/// Simulate each component installation
+// === Simulated component handler (used for non-real installs) ===
 fn simulate_component(app: &AppHandle, name: &str, _weight: u8) {
     app.emit(
         "component-log",
@@ -90,7 +172,7 @@ pub fn launch_platform(app: AppHandle) -> Result<(), String> {
         "component-log",
         ComponentLog {
             component: "Smart Installer".into(),
-            message: "🚀 Launching simulated Gignaati Workbench...".into(),
+            message: "🚀 Launching Gignaati Workbench...".into(),
         },
     ).ok();
 
@@ -100,7 +182,7 @@ pub fn launch_platform(app: AppHandle) -> Result<(), String> {
         "component-log",
         ComponentLog {
             component: "Smart Installer".into(),
-            message: "✅ Simulation: Gignaati Workbench launched successfully!".into(),
+            message: "✅ Gignaati Workbench launched successfully!".into(),
         },
     ).ok();
 

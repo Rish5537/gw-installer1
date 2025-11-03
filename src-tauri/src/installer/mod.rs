@@ -1,4 +1,5 @@
-// 🧩 Installer module index
+// 🧩 Installer Module Index
+// Central export hub for all installer logic components
 
 pub mod nodejs;
 pub mod n8n;
@@ -7,11 +8,13 @@ pub mod runner;
 pub mod smart;
 pub mod progress;
 pub mod cleanup;
+pub mod install_n8n_real; // ✅ newly added real npm-based installer module
 
-// Re-exports for lib.rs
+// === Re-exports for easy access in lib.rs ===
 pub use nodejs::check_nodejs_installed;
 pub use n8n::{check_n8n_installed, install_n8n};
 pub use ollama::{check_ollama_installed, install_ollama};
 pub use runner::run_installation;
 pub use smart::{smart_installer, launch_platform};
 pub use progress::start_progress_tracking;
+pub use install_n8n_real::install_n8n_real; // ✅ expose real installer function
