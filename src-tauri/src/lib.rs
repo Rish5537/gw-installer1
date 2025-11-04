@@ -15,6 +15,7 @@ use installer::{
     check_nodejs_installed,
     check_n8n_installed,
     check_ollama_installed,
+    validate_environment,
     install_n8n,          // legacy simulated install (kept for fallback)
     install_n8n_real,     // ✅ new real npm-based installer
     install_ollama,       // simulated fallback
@@ -24,6 +25,7 @@ use installer::{
     launch_platform,
     start_progress_tracking,
     cleanup_installation,
+    launch_n8n_internally,
 };
 
 // === Example Command ===
@@ -44,6 +46,7 @@ pub fn run() {
             check_nodejs_installed,
             check_n8n_installed,
             check_ollama_installed,
+            validate_environment,
             install_n8n,
             install_n8n_real,
             install_ollama,
@@ -52,7 +55,8 @@ pub fn run() {
             smart_installer,
             launch_platform,
             start_progress_tracking,
-            cleanup_installation
+            cleanup_installation,
+            launch_n8n_internally,
         ]);
 
     builder

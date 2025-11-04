@@ -47,7 +47,7 @@ export default function SmartInstaller() {
       }
 
       // Hide check button once Ollama is detected
-      if (message.includes("✅ Ollama detected")) {
+      if (message.includes("✅ Ollama detected") || message.includes("✅ Already installed")) {
         setOllamaWaiting(false);
       }
     });
@@ -121,7 +121,7 @@ export default function SmartInstaller() {
     }
   };
 
-  // 🔄 Manual re-check for Ollama after user installs it
+  // 🔄 Manual re-check for Ollama
   const checkOllamaAgain = async () => {
     setCheckingOllama(true);
     try {
@@ -136,7 +136,7 @@ export default function SmartInstaller() {
     }
   };
 
-  // 🌐 Open Node.js download page if missing
+  // 🌐 Open Node.js download
   const openNodeDownload = async () => {
     if (!nodeDownloadUrl) return;
     try {
@@ -243,6 +243,12 @@ export default function SmartInstaller() {
               border: "1px solid #eee",
               padding: 8,
               borderRadius: 8,
+              background:
+                c.status === "done"
+                  ? "#eaffea"
+                  : c.status === "failed"
+                  ? "#ffeaea"
+                  : "#fdfdfd",
             }}
           >
             <div
@@ -308,7 +314,7 @@ export default function SmartInstaller() {
         </div>
       )}
 
-      {/* ---- Log Console ---- */}
+      {/* ---- Log Console (color-coded) ---- */}
       <div style={{ marginTop: 12 }}>
         <pre
           style={{
@@ -318,9 +324,27 @@ export default function SmartInstaller() {
             height: 220,
             overflowY: "auto",
             borderRadius: 8,
+            whiteSpace: "pre-wrap",
           }}
         >
-          {logs.length > 0 ? logs.join("\n") : "Waiting for logs..."}
+          {logs.length > 0
+            ? logs.map((line, i) => (
+                <div
+                  key={i}
+                  style={{
+                    color: line.includes("✅")
+                      ? "#00ff9c"
+                      : line.includes("⚠")
+                      ? "#ffb84d"
+                      : line.includes("❌")
+                      ? "#ff6666"
+                      : "#dfffd8",
+                  }}
+                >
+                  {line}
+                </div>
+              ))
+            : "Waiting for logs..."}
         </pre>
       </div>
     </div>

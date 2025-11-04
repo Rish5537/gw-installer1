@@ -26,3 +26,5 @@ serde_json = "1"
 # ✅ Added for Phase 3.1 – system detection & validation
 sysinfo = "0.30"
 fs2 = "0.4"
+url = "2"
+shellexpand = "3"
