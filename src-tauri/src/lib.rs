@@ -94,6 +94,11 @@ pub fn run() {
 
             // --- Internal Launch (n8n UI) ---
             launch_n8n_internally,
+
+            repair_ollama_model,
+            remove_ollama_model,
+            cancel_ollama_download,
+
         ]);
 
     builder
