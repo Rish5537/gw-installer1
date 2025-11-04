@@ -1,19 +1,23 @@
 // 🧩 Gignaati Workbench Installer Backend
-// 🔧 Phase 4.2 — Config + Port Management Foundation (n8n + Ollama)
+// 🔧 Phase 4.3 — Unified Config, Port & Ollama Runtime Integration
+//
+// This file connects all installer, environment, and runtime systems
+// for the Gignaati Workbench backend (n8n + Ollama + SmartInstaller).
 
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-// === Modules ===
+// === Core Modules ===
 mod system;
-mod config;     // ✅ Global configuration manager
-mod ports;      // ✅ Port allocation and detection
-mod installer;
+mod config;           // ✅ Global configuration manager
+mod ports;            // ✅ Port allocation and detection logic
+mod installer;        // ✅ Installation orchestration (Node, n8n, Ollama)
+mod ollama_server;    // ✅ Ollama runtime manager (serve, stop, models)
 
 // === Imports ===
 use tauri::AppHandle;
 use system::detector::validate_requirements;
-// import the manager's allocate_ports and PortConfig from the ports module
 use crate::ports::manager::{allocate_ports, PortConfig};
+use ollama_server::*;
 use installer::{
     check_nodejs_installed,
     check_n8n_installed,
@@ -34,19 +38,18 @@ use installer::{
 // === Example Command (for Tauri) ===
 #[tauri::command]
 fn greet(name: &str) -> String {
-    format!("Hello, {}! You've been greeted from Rust!", name)
+    format!("Hello, {}! Welcome to the Gignaati Workbench Installer 🚀", name)
 }
 
 // === Config & Port Commands ===
 
-/// ✅ Allocate ports and return the PortConfig to the frontend
+/// ✅ Allocate ports dynamically and return the assigned configuration.
 #[tauri::command]
 fn allocate_ports_command(app: AppHandle) -> Result<PortConfig, String> {
-    // forward to ports::manager::allocate_ports which returns Result<PortConfig, String>
     allocate_ports(app)
 }
 
-/// ✅ Load and return global configuration (AppConfig)
+/// ✅ Load and return global configuration for the Workbench.
 #[tauri::command]
 fn get_config_command() -> Result<crate::config::AppConfig, String> {
     Ok(crate::config::AppConfig::load())
@@ -61,10 +64,12 @@ pub fn run() {
             // --- Utility / System ---
             greet,
             validate_requirements,
-            allocate_ports_command,  // ✅ returns PortConfig
-            get_config_command,      // ✅ returns AppConfig
 
-            // --- Core Installers ---
+            // --- Config & Port Layer ---
+            allocate_ports_command,   // returns PortConfig
+            get_config_command,       // returns AppConfig
+
+            // --- Core Installers (Node.js + n8n + Ollama) ---
             check_nodejs_installed,
             check_n8n_installed,
             check_ollama_installed,
@@ -81,7 +86,13 @@ pub fn run() {
             start_progress_tracking,
             cleanup_installation,
 
-            // --- Internal Launch ---
+            // --- Ollama Runtime Control ---
+            start_ollama_server,      // ✅ Start local Ollama service
+            stop_ollama_server,       // ✅ Stop it safely
+            list_ollama_models,       // ✅ List available local models
+            pull_ollama_model,        // ✅ Download new LLM models
+
+            // --- Internal Launch (n8n UI) ---
             launch_n8n_internally,
         ]);
 

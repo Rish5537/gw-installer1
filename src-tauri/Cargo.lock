@@ -1400,6 +1400,7 @@ version = "0.1.0"
 dependencies = [
  "dirs",
  "fs2",
+ "once_cell",
  "serde",
  "serde_json",
  "shellexpand",
