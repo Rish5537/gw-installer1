@@ -1398,6 +1398,7 @@ dependencies = [
 name = "gw-installer"
 version = "0.1.0"
 dependencies = [
+ "dirs",
  "fs2",
  "serde",
  "serde_json",
