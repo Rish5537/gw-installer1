@@ -39,7 +39,7 @@ pub fn start_ollama_server(app: AppHandle) -> Result<(), String> {
     .ok();
 
     let config = AppConfig::load();
-    let ollama_port = config.n8n_port.unwrap_or(11434);
+    let ollama_port = config.ollama_port.unwrap_or(11434);
     let ollama_path =
         detect_ollama_path().ok_or("❌ Ollama binary not found on this system.")?;
 
@@ -52,7 +52,22 @@ pub fn start_ollama_server(app: AppHandle) -> Result<(), String> {
     )
     .ok();
 
-    if is_ollama_running(ollama_port) {
+    // 🧹 Free port if busy
+    let port = config.ollama_port.unwrap_or(11434);
+    if is_listening(port) {
+        app.emit(
+            "component-log",
+            ComponentLog {
+                component: component.into(),
+                message: format!("⚠ Port {} is already in use. Attempting to free it...", port),
+            },
+        )
+        .ok();
+        let _ = free_port(port);
+        thread::sleep(Duration::from_secs(2));
+    }
+
+    if is_listening(ollama_port) {
         app.emit(
             "component-log",
             ComponentLog {
@@ -200,8 +215,7 @@ pub fn pull_ollama_model(app: AppHandle, model_name: String) -> Result<(), Strin
     .ok();
 
     thread::spawn(move || {
-        // Choose correct mode
-        let cmd_result = if is_ollama_running(11434) {
+        let cmd_result = if is_listening(11434) {
             Command::new("curl")
                 .args([
                     "-N",
@@ -245,7 +259,6 @@ pub fn pull_ollama_model(app: AppHandle, model_name: String) -> Result<(), Strin
             *dl = Some(cmd);
         }
 
-        // Stream and parse JSON output
         if let Some(stdout) = stdout {
             let app_progress = app.clone();
             let comp = component.to_string();
@@ -283,7 +296,6 @@ pub fn pull_ollama_model(app: AppHandle, model_name: String) -> Result<(), Strin
             });
         }
 
-        // Wait until completion or cancellation
         let status = {
             let mut handle = OLLAMA_DOWNLOAD.lock().unwrap();
             if let Some(mut child) = handle.take() {
@@ -419,7 +431,6 @@ struct OllamaProgress {
     total: Option<u64>,
 }
 
-/// Cleanly interpret Ollama JSON lines
 fn parse_ollama_json_line(line: &str) -> Option<String> {
     if let Ok(json) = serde_json::from_str::<OllamaProgress>(line) {
         if let (Some(c), Some(t)) = (json.completed, json.total) {
@@ -457,6 +468,57 @@ fn detect_ollama_path() -> Option<String> {
     None
 }
 
-fn is_ollama_running(port: u16) -> bool {
+/// ✅ Check if port is listening
+fn is_listening(port: u16) -> bool {
     TcpStream::connect(("127.0.0.1", port)).is_ok()
+}
+
+/// 🧹 Free the port if in use (cross-platform)
+fn free_port(port: u16) -> Result<(), String> {
+    #[cfg(target_os = "windows")]
+    {
+        let cmd = format!("netstat -ano | findstr :{}", port);
+        let output = Command::new("cmd")
+            .args(&["/C", &cmd])
+            .output()
+            .map_err(|e| format!("Failed to run netstat: {}", e))?;
+
+        let stdout = String::from_utf8_lossy(&output.stdout).to_string();
+        if stdout.trim().is_empty() {
+            return Ok(());
+        }
+
+        for line in stdout.lines() {
+            if let Some(pid) = line.split_whitespace().last() {
+                let _ = Command::new("taskkill")
+                    .args(&["/F", "/PID", pid])
+                    .output()
+                    .map_err(|e| format!("Failed to kill process on port {}: {}", port, e))?;
+            }
+        }
+        Ok(())
+    }
+
+    #[cfg(not(target_os = "windows"))]
+    {
+        let output = Command::new("sh")
+            .arg("-c")
+            .arg(format!("lsof -t -i :{}", port))
+            .output()
+            .map_err(|e| format!("Failed to run lsof: {}", e))?;
+
+        let stdout = String::from_utf8_lossy(&output.stdout).to_string();
+        if stdout.trim().is_empty() {
+            return Ok(());
+        }
+
+        for pid in stdout.lines() {
+            let _ = Command::new("kill")
+                .arg("-9")
+                .arg(pid)
+                .output()
+                .map_err(|e| format!("Failed to kill PID {}: {}", pid, e))?;
+        }
+        Ok(())
+    }
 }

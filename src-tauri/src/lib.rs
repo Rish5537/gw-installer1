@@ -1,5 +1,5 @@
 // 🧩 Gignaati Workbench Installer Backend
-// 🔧 Phase 4.3 — Unified Config, Port & Ollama Runtime Integration
+// 🔧 Phase 4.4 — Port Binding, n8n Launch Integration, and Ollama Bridge
 //
 // This file connects all installer, environment, and runtime systems
 // for the Gignaati Workbench backend (n8n + Ollama + SmartInstaller).
@@ -8,10 +8,11 @@
 
 // === Core Modules ===
 mod system;
-mod config;           // ✅ Global configuration manager
-mod ports;            // ✅ Port allocation and detection logic
-mod installer;        // ✅ Installation orchestration (Node, n8n, Ollama)
-mod ollama_server;    // ✅ Ollama runtime manager (serve, stop, models)
+mod config;            // ✅ Global configuration manager
+mod ports;             // ✅ Port allocation and detection logic
+mod installer;         // ✅ Installation orchestration (Node, n8n, Ollama)
+mod ollama_server;     // ✅ Ollama runtime manager (serve, stop, models)
+mod n8n_manager;       // ✅ Agentic Platform controller (n8n + Ollama bridge)
 
 // === Imports ===
 use tauri::AppHandle;
@@ -91,14 +92,18 @@ pub fn run() {
             stop_ollama_server,       // ✅ Stop it safely
             list_ollama_models,       // ✅ List available local models
             pull_ollama_model,        // ✅ Download new LLM models
-
-            // --- Internal Launch (n8n UI) ---
-            launch_n8n_internally,
-
             repair_ollama_model,
             remove_ollama_model,
             cancel_ollama_download,
 
+            // --- Agentic Platform / n8n Integration ---
+            n8n_manager::launch_n8n_with_ollama,   // 🚀 Launch n8n bound to Ollama port
+            n8n_manager::stop_n8n,                 // 🛑 Stop n8n process
+            n8n_manager::check_n8n_health,         // 🔎 Check n8n health
+            n8n_manager::launch_agentic_platform,  // 🌐 Open Agentic Platform UI in main webview
+
+            // --- Internal Launch (n8n UI) ---
+            launch_n8n_internally,
         ]);
 
     builder

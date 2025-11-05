@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 use std::{
     env,
     fs::{self, File},
-    io::{Read},
+    io::Read,
     path::PathBuf,
 };
 
@@ -10,9 +10,11 @@ use std::{
 pub struct AppConfig {
     pub node_version: Option<String>,
     pub npm_version: Option<String>,
+
     pub n8n_installed: bool,
     pub n8n_path: Option<String>,
     pub n8n_port: Option<u16>,
+
     pub ollama_installed: bool,
     pub ollama_path: Option<String>,
     pub ollama_version: Option<String>,
@@ -21,24 +23,39 @@ pub struct AppConfig {
 }
 
 impl AppConfig {
-    /// Load existing configuration or create a new default file
+    /// Load existing configuration or create a new default file.
+    /// Ensures all critical fields (like ports) are initialized.
     pub fn load() -> Self {
         let path = config_path();
+
+        // Try reading file
         if let Ok(mut file) = File::open(&path) {
             let mut data = String::new();
             if file.read_to_string(&mut data).is_ok() {
-                if let Ok(parsed) = serde_json::from_str::<AppConfig>(&data) {
+                if let Ok(mut parsed) = serde_json::from_str::<AppConfig>(&data) {
+                    // --- Auto-default critical fields if missing ---
+                    if parsed.n8n_port.is_none() {
+                        parsed.n8n_port = Some(5678);
+                    }
+                    if parsed.ollama_port.is_none() {
+                        parsed.ollama_port = Some(11434);
+                    }
+
+                    parsed.save();
                     return parsed;
                 }
             }
         }
-        // create new default file
-        let cfg = AppConfig::default();
+
+        // --- Create new default config file ---
+        let mut cfg = AppConfig::default();
+        cfg.n8n_port = Some(5678);
+        cfg.ollama_port = Some(11434);
         cfg.save();
         cfg
     }
 
-    /// Save configuration back to disk
+    /// Save configuration back to disk.
     pub fn save(&self) {
         let path = config_path();
         if let Some(parent) = path.parent() {
@@ -49,7 +66,7 @@ impl AppConfig {
         }
     }
 
-    /// Update fields from a partial config and persist
+    /// Update fields from a partial config and persist.
     #[allow(dead_code)]
     pub fn update(&mut self, partial: AppConfig) {
         if partial.node_version.is_some() {
@@ -76,8 +93,12 @@ impl AppConfig {
         if partial.ollama_default_model.is_some() {
             self.ollama_default_model = partial.ollama_default_model;
         }
+
+        // Merge boolean flags (logical OR)
         self.n8n_installed |= partial.n8n_installed;
         self.ollama_installed |= partial.ollama_installed;
+
+        // Always persist to disk
         self.save();
     }
 }
@@ -85,7 +106,9 @@ impl AppConfig {
 /// Determine cross-platform config file path
 pub fn config_path() -> PathBuf {
     let base = if cfg!(target_os = "windows") {
-        env::var("APPDATA").map(PathBuf::from).unwrap_or_else(|_| PathBuf::from("."))
+        env::var("APPDATA")
+            .map(PathBuf::from)
+            .unwrap_or_else(|_| PathBuf::from("."))
     } else {
         let mut path = dirs::config_dir().unwrap_or_else(|| PathBuf::from("."));
         path.push("gignaati");
