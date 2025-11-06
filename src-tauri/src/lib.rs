@@ -101,7 +101,8 @@ pub fn run() {
             n8n_manager::stop_n8n,                 // 🛑 Stop n8n process
             n8n_manager::check_n8n_health,         // 🔎 Check n8n health
             n8n_manager::launch_agentic_platform,  // 🌐 Open Agentic Platform UI in main webview
-
+            get_ollama_status,
+            get_ollama_details,
             // --- Internal Launch (n8n UI) ---
             launch_n8n_internally,
         ]);

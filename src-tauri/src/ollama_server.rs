@@ -522,3 +522,21 @@ fn free_port(port: u16) -> Result<(), String> {
         Ok(())
     }
 }
+/// 🧠 Get current Ollama server status for frontend or n8n integration
+#[tauri::command]
+pub fn get_ollama_status() -> Result<String, String> {
+    let cfg = AppConfig::load();
+    let port = cfg.ollama_port.unwrap_or(11434);
+
+    if TcpStream::connect(("127.0.0.1", port)).is_ok() {
+        Ok(format!("✅ Ollama is running on http://127.0.0.1:{}", port))
+    } else {
+        Err(format!("❌ Ollama not running on http://127.0.0.1:{}", port))
+    }
+}
+
+/// 📦 Return Ollama configuration details (for UI or n8n)
+#[tauri::command]
+pub fn get_ollama_details() -> Result<AppConfig, String> {
+    Ok(AppConfig::load())
+}
