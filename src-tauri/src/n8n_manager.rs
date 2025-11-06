@@ -1,4 +1,4 @@
-use tauri::{AppHandle, Emitter, Manager}; // Manager removed — not used in Tauri v2
+use tauri::{AppHandle, Emitter, Manager};
 use serde::Serialize;
 use std::process::{Command, Stdio};
 use std::io::{BufRead, BufReader};
@@ -102,19 +102,30 @@ fn detect_n8n_command() -> (String, Vec<String>) {
 
     ("npx".to_string(), vec!["n8n".to_string(), "start".to_string()])
 }
+/// ✅ Provide Ollama URL for frontend and n8n nodes
+#[allow(dead_code)]
+#[tauri::command]
+pub fn get_ollama_url() -> Result<String, String> {
+    let cfg = AppConfig::load();
+    let port = cfg.ollama_port.unwrap_or(11434);
+    Ok(format!("http://127.0.0.1:{}", port))
+}
 
 /// 🚀 Launch n8n with OLLAMA_API_URL
 #[tauri::command]
 pub fn launch_n8n_with_ollama(app: AppHandle) -> Result<(), String> {
     let component = "Agentic Platform (n8n)";
-    app.emit("component-log", ComponentLog {
-        component: component.into(),
-        message: "🚀 Launching n8n with Ollama binding...".into(),
-    }).ok();
-
     let cfg = AppConfig::load();
     let ollama_port = cfg.ollama_port.unwrap_or(11434);
     let n8n_port = cfg.n8n_port.unwrap_or(5678);
+
+    app.emit("component-log", ComponentLog {
+        component: component.into(),
+        message: format!(
+            "🚀 Launching n8n bound to OLLAMA_API_URL=http://127.0.0.1:{}",
+            ollama_port
+        ),
+    }).ok();
 
     let _ = free_port(n8n_port);
 
@@ -125,6 +136,11 @@ pub fn launch_n8n_with_ollama(app: AppHandle) -> Result<(), String> {
     let mut cmd = Command::new(&bin);
     for a in &base_args {
         cmd.arg(a);
+    }
+
+    // ✅ Ensure PATH is propagated (fixes “n8n not found” issues)
+    if let Ok(path) = std::env::var("PATH") {
+        cmd.env("PATH", path);
     }
 
     cmd.env("OLLAMA_API_URL", format!("http://127.0.0.1:{}", ollama_port));
