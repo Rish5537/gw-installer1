@@ -30,6 +30,13 @@ export default function SmartInstaller() {
   const [pullingModel, setPullingModel] = useState(false);
   const [lastFailedModel, setLastFailedModel] = useState<string | null>(null);
 
+  // 🧩 Ollama metadata from backend
+  const [ollamaDetails, setOllamaDetails] = useState<{
+    port?: number;
+    version?: string;
+    model?: string;
+  } | null>(null);
+
   // 🧩 Progress tracking
   const [modelProgress, setModelProgress] = useState<number | null>(null);
   const [modelStatus, setModelStatus] = useState<string>("Idle");
@@ -132,6 +139,34 @@ export default function SmartInstaller() {
       unNode.then((u) => u());
     };
   }, [selectedModel]);
+
+  // 🧩 Auto-check Ollama status on mount
+  useEffect(() => {
+    const checkOllama = async () => {
+      try {
+        const status: string = await invoke("get_ollama_status");
+        setOllamaRunning(true);
+        setLogs(prev => [...prev, `[Ollama] ${status}`]);
+
+        const details = await invoke<{
+          ollama_port?: number;
+          ollama_version?: string;
+          ollama_default_model?: string;
+        }>("get_ollama_details");
+
+        setOllamaDetails({
+          port: details.ollama_port,
+          version: details.ollama_version,
+          model: details.ollama_default_model,
+        });
+      } catch {
+        setOllamaRunning(false);
+        setLogs(prev => [...prev, "[Ollama] ❌ Not running"]);
+      }
+    };
+
+    checkOllama();
+  }, []);
 
   // 📊 Aggregate progress
   const aggregatedPercent = useMemo(() => {
@@ -348,7 +383,14 @@ export default function SmartInstaller() {
           <button onClick={fetchModels} disabled={!ollamaRunning}>📦 List Models</button>
         </div>
 
-        {/* Model pull + progress + recent models ... (your existing code) */}
+        {/* ✅ Show live Ollama info */}
+        {ollamaDetails && (
+          <div style={{ marginTop: 8, fontSize: 14, color: "gray" }}>
+            <strong>🧩 Ollama Info:</strong>{" "}
+            Port {ollamaDetails.port ?? "—"} | Version {ollamaDetails.version ?? "—"} | Model{" "}
+            {ollamaDetails.model ?? "—"}
+          </div>
+        )}
 
         {/* === Agentic Platform Management Section === */}
         <div style={{ marginTop: 28, borderTop: "1px solid #ddd", paddingTop: 16 }}>
